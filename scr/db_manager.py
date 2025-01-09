@@ -19,7 +19,34 @@ class DBManager:
         if self.connection:
             self.connection.close()
 
+    def save_company(self, company_data):
+        """Метод для сохранения компании в БД с проверкой на дублирование"""
+        self.cursor.execute(
+            """
+            INSERT INTO companies (name, industry, description, url)
+            VALUES (%s, %s, %s, %s)
+            ON CONFLICT (name) DO NOTHING  -- Если компания с таким именем уже есть, пропускаем вставку
+            RETURNING id
+            """,
+            (
+                company_data["name"],
+                company_data.get("industries", [{}])[0].get("name"),
+                company_data.get("description", ""),
+                company_data.get("url", "")
+            )
+        )
+        result = self.cursor.fetchone()
+        if result:  # Если компания была вставлена, возвращаем ее ID
+            company_id = result[0]
+        else:
+            # Если компания уже существует, получаем ее ID
+            self.cursor.execute("SELECT id FROM companies WHERE name = %s", (company_data["name"],))
+            company_id = self.cursor.fetchone()[0]
+        self.connection.commit()
+        return company_id
+
     def save_vacancies(self, vacancies, company_id):
+        """Метод для сохранения вакансий с проверкой на дублирование"""
         for vacancy in vacancies:
             salary_min = vacancy["salary"]["from"] if vacancy["salary"] else None
             salary_max = vacancy["salary"]["to"] if vacancy["salary"] else None
@@ -28,26 +55,13 @@ class DBManager:
                 """
                 INSERT INTO vacancies (title, salary_min, salary_max, currency, description, url, company_id)
                 VALUES (%s, %s, %s, %s, %s, %s, %s)
+                ON CONFLICT (title, company_id) DO NOTHING  -- Если вакансия с таким названием и компанией уже существует, пропускаем вставку
                 """,
                 (vacancy["name"], salary_min, salary_max, currency,
                  vacancy["snippet"]["responsibility"], vacancy["alternate_url"], company_id)
             )
         self.connection.commit()
 
-    def save_company(self, company_data):
-        """Пример метода для сохранения компании в БД."""
-        self.cursor.execute(
-            "INSERT INTO companies (name, industry, description, url) VALUES (%s, %s, %s, %s) RETURNING id",
-            (
-                company_data["name"],
-                company_data.get("industries", [{}])[0].get("name"),
-                company_data.get("description", ""),
-                company_data.get("url", "")
-            )
-        )
-        company_id = self.cursor.fetchone()[0]
-        self.connection.commit()
-        return company_id
 
     def get_companies_and_vacancies_count(self):
         self.cursor.execute("""

@@ -1,6 +1,7 @@
 import psycopg2
 from scr.config import DB_CONFIG
 
+
 def initialize_db():
     try:
         with psycopg2.connect(**DB_CONFIG, options="-c client_encoding=utf8") as conn:
