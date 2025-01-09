@@ -4,6 +4,7 @@ from scr.db_setup import initialize_db
 import requests
 import time
 
+
 def main():
     initialize_db()
 
@@ -39,6 +40,7 @@ def main():
                 print(f"Вакансии для компании {company_data['name']} сохранены.")
             else:
                 print(f"Вакансии для компании {company_data['name']} не найдены.")
+
 
 if __name__ == "__main__":
     main()

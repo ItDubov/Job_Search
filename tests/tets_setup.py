@@ -3,6 +3,7 @@ from unittest.mock import patch, MagicMock
 import psycopg2
 from scr.db_setup import initialize_db  # Импортируем функцию из вашего кода
 
+
 class TestDBSetup(unittest.TestCase):
 
     @patch('psycopg2.connect')
@@ -50,6 +51,7 @@ class TestDBSetup(unittest.TestCase):
         # Перехватываем вывод в консоль
         with self.assertRaises(psycopg2.Error):
             initialize_db()  # Функция должна выбросить исключение и вызвать ошибку подключения
+
 
 if __name__ == '__main__':
     unittest.main()
